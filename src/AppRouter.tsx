@@ -1,15 +1,20 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Dashboard from "./pages";
+import Layout from "./pages/layout.tsx";
 import Collections from "./pages/Collections";
+import TodoList from "./pages/TodoList.tsx";
 
 const appRouter = createBrowserRouter([
     {
         path: "/",
-        element: <Dashboard />,
+        element: <Layout />,
         children: [
             {
                 path: "/",
                 element: <Collections />,
+            },
+            {
+                path: "/todo",
+                element: <TodoList />,
             },
         ],
     },

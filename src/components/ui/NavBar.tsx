@@ -1,5 +1,5 @@
 import React from "react";
-import ToggleThemeBtn from "../../components/ui/ToggleThemeBtn";
+import ToggleThemeBtn from "./ToggleThemeBtn";
 
 const NavBar = () => {
     return (
