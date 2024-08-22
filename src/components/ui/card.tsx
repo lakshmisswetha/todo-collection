@@ -16,7 +16,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
                 ref={ref}
                 onClick={handleClick}
                 className={cn(
-                    "w-auto lg:w-[200px] rounded-xl border bg-muted cursor-pointer transition duration-300 ease-in-out transform hover:shadow-lg hover:scale-105 text-card-foreground shadow",
+                    "w-auto lg:w-[200px] rounded-xl border hover:bg-muted cursor-pointer  text-card-foreground shadow",
                     className
                 )}
                 {...props}

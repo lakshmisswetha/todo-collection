@@ -38,26 +38,30 @@ const TodoList = () => {
     const title = (location.state as { title?: string })?.title || "Default Title";
 
     return (
-        <div>
-            <h1 className="text-2xl mb-4 ml-1 font-bold">{title}</h1>
-            <div className="flex mt-6">
+        <div className=" flex flex-col px-14">
+            <div className="flex items-center">
                 <div
                     onClick={handleBackClick}
-                    className="flex justify-center items-center mr-10 cursor-pointer"
+                    className="flex justify-center items-center  cursor-pointer"
                 >
                     <MdOutlineArrowBackIosNew className="text-2xl" />
                 </div>
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl  font-bold ml-2 self-center">{title}</h1>
+                </div>
+            </div>
 
+            <div className="flex mt-6 w-[100%]">
                 <Input
                     value={inputValue}
                     onKeyDown={handleKeyDown}
                     placeholder="Add a new Task..."
-                    className="bg-muted rounded-lg border-muted w-[300px] "
+                    className="bg-muted rounded-lg w-full "
                     onChange={handleInputChange}
                 />
                 <Button onClick={handleAddTask}>Add</Button>
             </div>
-            <ul className="mt-12 flex flex-col items-center justify-center">
+            <ul className="mt-12 flex flex-col items-center justify-center w-full">
                 {tasks.length === 0 ? (
                     <div className="w-full h-fit flex justify-center items-center p-12">
                         <p className="text-muted-foreground ">
@@ -68,7 +72,7 @@ const TodoList = () => {
                     tasks.map((task, index) => (
                         <li
                             key={index}
-                            className="w-full flex items-center justify-between bg-muted p-4 mb-1"
+                            className="w-full flex items-center justify-between bg-muted p-4 mb-3 rounded-lg"
                         >
                             <div className="flex items-center">
                                 <Checkbox />
