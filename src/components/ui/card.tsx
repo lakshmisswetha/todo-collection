@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { IoHeartOutline } from "react-icons/io5";
+
 import { cn } from "@/lib/utils";
 import { Collection } from "../../contexts/types";
 

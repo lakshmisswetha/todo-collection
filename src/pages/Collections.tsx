@@ -1,11 +1,10 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { MdPersonalInjury } from "react-icons/md";
-import { FcLike } from "react-icons/fc";
+
 import { FaLaptop } from "react-icons/fa";
 import { FaHandHoldingHeart } from "react-icons/fa";
 import { MdLocalGroceryStore } from "react-icons/md";
-import { IoAddOutline, IoHeartOutline } from "react-icons/io5";
+
 import { DialogDemo } from "@/components/ui/addCollection";
 import { useCollectionContext } from "../contexts/collectionContext";
 import { Collection } from "../contexts/types";
