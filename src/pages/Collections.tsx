@@ -21,7 +21,7 @@ const Collections = () => {
                 <DialogDemo />
             </div>
             <div className="mt-6 ">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 ">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 ">
                     {collections.map((collection: Collection) => (
                         <Card collection={collection} key={collection.id} title={collection.title}>
                             <CardHeader>

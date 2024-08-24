@@ -45,6 +45,11 @@ export function DialogDemo() {
         setCollectionName("");
         setOpen(false);
     };
+    const handleKeyDown = (e: any) => {
+        if (e.key === "Enter") {
+            handleCreateCollection();
+        }
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -66,6 +71,7 @@ export function DialogDemo() {
                             value={collectionName}
                             className="col-span-3"
                             placeholder="Collection name..."
+                            onKeyDown={handleKeyDown}
                         />
                     </div>
                 </div>

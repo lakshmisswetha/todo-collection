@@ -125,7 +125,7 @@ const TodoList = () => {
 
     return (
         <div className="flex flex-col px-14 w-full">
-            <div className="flex items-center w-full">
+            <div className="flex items-center w-full mb-6">
                 <div
                     onClick={handleBackClick}
                     className="flex justify-center items-center cursor-pointer"
@@ -133,7 +133,7 @@ const TodoList = () => {
                     <MdOutlineArrowBackIosNew className="text-2xl" />
                 </div>
                 <div className="flex justify-between items-center w-full">
-                    <h1 className="text-2xl font-bold ml-2 self-center">
+                    <h1 className="text-2xl font-semibold ml-2 self-center">
                         {collection.title || "Todo List"}
                     </h1>
                 </div>
@@ -166,7 +166,9 @@ const TodoList = () => {
                     className="bg-muted rounded-lg w-full outline-none border-none"
                     onChange={handleInputChange}
                 />
-                <Button onClick={handleAddTask}>Add</Button>
+                <Button onClick={handleAddTask} className="ml-1">
+                    Add
+                </Button>
             </div>
             <ul className="mt-12 flex flex-col items-center justify-center w-full">
                 {collection.todos.length === 0 ? (
@@ -188,7 +190,9 @@ const TodoList = () => {
                                         handleCheckboxChange(task.id, checked)
                                     }
                                 />
-                                <h2 className="ml-3">{task.name}</h2>
+                                <h2 className={`ml-3 ${task.isChecked ? "line-through" : ""}`}>
+                                    {task.name}
+                                </h2>
                             </div>
                             <div className="flex items-center">
                                 <MdDelete
