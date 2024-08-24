@@ -1,14 +1,19 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-
+import { IoHeartOutline } from "react-icons/io5";
 import { cn } from "@/lib/utils";
+import { Collection } from "../../contexts/types";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    ({ title, className, ...props }, ref) => {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+    collection: Collection;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+    ({ collection, className, ...props }, ref) => {
         const navigate = useNavigate();
 
         const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-            navigate("/todo", { state: { title } });
+            navigate("/todo", { state: { id: collection.id } });
         };
 
         return (
@@ -20,7 +25,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
                     className
                 )}
                 {...props}
-                data-title={title}
+                data-title={collection.title}
             />
         );
     }
