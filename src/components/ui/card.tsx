@@ -12,7 +12,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     ({ collection, className, ...props }, ref) => {
         const navigate = useNavigate();
 
-        const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const handleClick = () => {
             navigate("/todo", { state: { id: collection.id } });
         };
 
