@@ -1,4 +1,3 @@
-import React from "react";
 import ToggleThemeBtn from "./ToggleThemeBtn";
 
 const NavBar = () => {
