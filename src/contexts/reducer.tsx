@@ -1,11 +1,12 @@
 import { State, Action } from "./types";
-import { v4 as uuidv4 } from "uuid";
+
+import { produce } from "immer";
 
 const defaultCollections = [
-    { id: uuidv4(), title: "Work", todos: [] },
-    { id: uuidv4(), title: "Personal", todos: [] },
-    { id: uuidv4(), title: "Fitness", todos: [] },
-    { id: uuidv4(), title: "Grocery", todos: [] },
+    { id: crypto.randomUUID(), title: "Work", todos: [] },
+    { id: crypto.randomUUID(), title: "Personal", todos: [] },
+    { id: crypto.randomUUID(), title: "Fitness", todos: [] },
+    { id: crypto.randomUUID(), title: "Grocery", todos: [] },
 ];
 
 const getStoredCollections = () => {
@@ -28,111 +29,79 @@ export const initialState: State = {
 };
 
 export function reducer(state: State, action: Action): State {
-    let updatedCollections;
+    return produce(state, (draft) => {
+        switch (action.type) {
+            case "ADD_TODO":
+                const addCollection = draft.collections.find(
+                    (collection) => collection.id === action.payload.collectionId
+                );
+                if (addCollection) {
+                    addCollection.todos.push({
+                        id: crypto.randomUUID(),
+                        name: action.payload.name,
+                        isChecked: false,
+                    });
+                }
+                break;
 
-    switch (action.type) {
-        case "ADD_TODO":
-            updatedCollections = state.collections.map((collection) =>
-                collection.id === action.payload.collectionId
-                    ? {
-                          ...collection,
-                          todos: [
-                              ...collection.todos,
-                              {
-                                  id: uuidv4(),
-                                  name: action.payload.name,
-                                  isChecked: false,
-                              },
-                          ],
-                      }
-                    : collection
-            );
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
+            case "DELETE_TODO":
+                const deleteCollection = draft.collections.find(
+                    (collection) => collection.id === action.payload.collectionId
+                );
+                if (deleteCollection) {
+                    deleteCollection.todos = deleteCollection.todos.filter(
+                        (todo) => todo.id !== action.payload.todoId
+                    );
+                }
+                break;
 
-        case "DELETE_TODO":
-            updatedCollections = state.collections.map((collection) =>
-                collection.id === action.payload.collectionId
-                    ? {
-                          ...collection,
-                          todos: collection.todos.filter(
-                              (todo) => todo.id !== action.payload.todoId
-                          ),
-                      }
-                    : collection
-            );
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
-        case "UPDATE_TODO":
-            updatedCollections = state.collections.map((collection) =>
-                collection.id === action.payload.collectionId
-                    ? {
-                          ...collection,
-                          todos: collection.todos.map((todo) =>
-                              todo.id === action.payload.todoId
-                                  ? { ...todo, name: action.payload.name }
-                                  : todo
-                          ),
-                      }
-                    : collection
-            );
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
+            case "UPDATE_TODO":
+                const updateCollection = draft.collections.find(
+                    (collection) => collection.id === action.payload.collectionId
+                );
+                if (updateCollection) {
+                    const todo = updateCollection.todos.find(
+                        (todo) => todo.id === action.payload.todoId
+                    );
+                    if (todo) {
+                        todo.name = action.payload.name;
+                    }
+                }
+                break;
 
-        case "TOGGLE_TODO":
-            updatedCollections = state.collections.map((collection) =>
-                collection.id === action.payload.collectionId
-                    ? {
-                          ...collection,
-                          todos: collection.todos.map((todo) =>
-                              todo.id === action.payload.taskId
-                                  ? { ...todo, isChecked: action.payload.isChecked }
-                                  : todo
-                          ),
-                      }
-                    : collection
-            );
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
+            case "TOGGLE_TODO":
+                const toggleCollection = draft.collections.find(
+                    (collection) => collection.id === action.payload.collectionId
+                );
+                if (toggleCollection) {
+                    const todo = toggleCollection.todos.find(
+                        (todo) => todo.id === action.payload.taskId
+                    );
+                    if (todo) {
+                        todo.isChecked = action.payload.isChecked;
+                    }
+                }
+                break;
 
-        case "CREATE_COLLECTION":
-            updatedCollections = [
-                ...state.collections,
-                {
-                    id: uuidv4(),
+            case "CREATE_COLLECTION":
+                draft.collections.push({
+                    id: crypto.randomUUID(),
                     title: action.payload.title,
                     todos: [],
-                },
-            ];
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
+                });
+                break;
 
-        case "DELETE_COLLECTION":
-            updatedCollections = state.collections.filter(
-                (collection) => collection.id !== action.payload.collectionId
-            );
-            localStorage.setItem("collections", JSON.stringify(updatedCollections));
-            return {
-                ...state,
-                collections: updatedCollections,
-            };
+            case "DELETE_COLLECTION":
+                draft.collections = draft.collections.filter(
+                    (collection) => collection.id !== action.payload.collectionId
+                );
+                break;
 
-        default:
-            return state;
-    }
+            default:
+                break;
+        }
+
+        // Save the updated state to localStorage
+        localStorage.setItem("collections", JSON.stringify(draft.collections));
+    });
 }
