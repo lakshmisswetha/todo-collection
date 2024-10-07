@@ -11,39 +11,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useState } from "react";
-import { useCollectionContext } from "@/contexts/collectionContext";
+
+import { useQueryClient } from "@tanstack/react-query";
+
+//import { useCollectionContext } from "@/contexts/collectionContext";
 
 import { ActionType } from "../../contexts/types";
+import { BASE_URL } from "@/utils/config";
 
 export function DialogDemo() {
+    const queryClient = useQueryClient();
     const [collectionName, setCollectionName] = useState("");
     const [open, setOpen] = useState(false);
-    const { dispatch, state } = useCollectionContext();
+    //const { dispatch, state } = useCollectionContext();
+    const userId = localStorage.getItem("userId");
 
-    const handleCreateCollection = () => {
+    const handleCreateCollection = async () => {
         if (collectionName.trim() === "") return;
 
         const collectionNameLower = collectionName.trim().toLowerCase();
 
-        // Check if collection name already exists
-        if (
-            state.collections.some(
-                (collection) => collection.title.toLowerCase() === collectionNameLower
-            )
-        ) {
-            alert("Collection with this name already exists!");
-            return;
+        // if (
+        //     state.collections.some(
+        //         (collection) => collection.title.toLowerCase() === collectionNameLower
+        //     )
+        // ) {
+        //     alert("Collection with this name already exists!");
+        //     return;
+        // }
+        try {
+            const response = await fetch(`${BASE_URL}/collections/create`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: collectionName.trim(),
+                    userId: Number(userId),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to create collection");
+            }
+
+            //const newCollection = await response.json();
+            queryClient.invalidateQueries({
+                queryKey: ["collections"],
+            });
+            setCollectionName("");
+            setOpen(false);
+        } catch (error) {
+            console.error(error);
+            alert("There was an error creating the collection.");
         }
-
-        dispatch({
-            type: ActionType.CREATE_COLLECTION,
-            payload: {
-                title: collectionName.trim(),
-            },
-        });
-
-        setCollectionName("");
-        setOpen(false);
     };
     const handleKeyDown = (e: any) => {
         if (e.key === "Enter") {
@@ -76,9 +97,7 @@ export function DialogDemo() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleCreateCollection}>
-                        Create
-                    </Button>
+                    <Button type="submit">Create</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

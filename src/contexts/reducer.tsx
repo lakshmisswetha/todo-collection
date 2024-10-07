@@ -2,32 +2,6 @@ import { State, Action } from "./types";
 
 import { produce } from "immer";
 
-const defaultCollections = [
-    { id: crypto.randomUUID(), title: "Work", todos: [] },
-    { id: crypto.randomUUID(), title: "Personal", todos: [] },
-    { id: crypto.randomUUID(), title: "Fitness", todos: [] },
-    { id: crypto.randomUUID(), title: "Grocery", todos: [] },
-];
-
-const getStoredCollections = () => {
-    try {
-        const storedCollections = localStorage.getItem("collections");
-        if (storedCollections) {
-            const parsedCollections = JSON.parse(storedCollections);
-            if (Array.isArray(parsedCollections)) {
-                return parsedCollections;
-            }
-        }
-    } catch (e) {
-        console.error("Error parsing collections from localStorage:", e);
-    }
-    return defaultCollections;
-};
-
-export const initialState: State = {
-    collections: getStoredCollections(),
-};
-
 export function reducer(state: State, action: Action): State {
     return produce(state, (draft) => {
         switch (action.type) {

@@ -3,9 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineArrowBackIosNew, MdDelete, MdModeEdit } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import ControlledCheckbox from "@/components/ui/controlledCheckBox";
-import { useCollectionContext } from "@/contexts/collectionContext";
+//import { useCollectionContext } from "@/contexts/collectionContext";
 import { ActionType } from "../contexts/types";
+import { BASE_URL } from "@/utils/config";
 
 import {
     Dialog,
@@ -16,13 +18,93 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 
+const fetchTodos = async (userId: string | null, collectionId: string | null) => {
+    const response = await fetch(
+        `${BASE_URL}/todos/get?userId=${userId}&collectionId=${collectionId}`
+    );
+    if (!response.ok) {
+        throw new Error("Failed to fetch todos");
+    }
+    return response.json();
+};
+const addTodos = async (newTodo: any) => {
+    try {
+        const response = await fetch(`${BASE_URL}/todos/add`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newTodo),
+        });
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+
+        return response.json();
+    } catch (err) {
+        console.log(err);
+    }
+};
+const updateTodos = async (updateData: any) => {
+    try {
+        const response = await fetch(`${BASE_URL}/todos/update`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateData),
+        });
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    } catch (err) {
+        console.log(err);
+    }
+};
+const deleteTodos = async (taskId: any) => {
+    try {
+        const response = await fetch(`${BASE_URL}/todos/delete`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ taskId: taskId }),
+        });
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
+const deleteCollection = async (collectionId: any) => {
+    try {
+        const response = await fetch(`${BASE_URL}/collections/delete`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ collectionId: collectionId }),
+        });
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
+
 const TodoList = () => {
-    const { state, dispatch } = useCollectionContext();
+    //const { state, dispatch } = useCollectionContext();
+    const queryClient = useQueryClient();
     const location = useLocation();
     const navigate = useNavigate();
+    const userId = localStorage.getItem("userId");
 
     const collectionId = (location.state as { id: string })?.id;
-    const collection = state.collections.find((c) => c.id === collectionId);
+    const collectionName = (location.state as { name: string })?.name;
+    //const collection = state.collections.find((c) => c.id === collectionId);
 
     const [inputValue, setInputValue] = useState("");
     const [isEditing, setIsEditing] = useState(false);
@@ -30,42 +112,101 @@ const TodoList = () => {
 
     const [isDialogOpen, setDialogOpen] = useState(false);
 
-    useEffect(() => {
-        if (state.collections.length > 0) {
-            localStorage.setItem("collections", JSON.stringify(state.collections));
-        }
-    }, [state.collections]);
+    const { data, isLoading, error } = useQuery({
+        queryKey: ["todos"],
+        queryFn: () => fetchTodos(userId, collectionId),
+    });
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error loading todos</div>;
+
+    const mutation = useMutation({
+        mutationFn: addTodos,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["todos"] });
+        },
+    });
+
+    const mutation2 = useMutation({
+        mutationFn: updateTodos,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["todos"] });
+            setIsEditing(false);
+            setEditingTaskId(null);
+            setInputValue("");
+        },
+        onError: (error) => {
+            console.error("Error updating todo:", error);
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteTodos,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["todos"] });
+        },
+        onError: (error) => {
+            console.error("Error deleting todo:", error);
+        },
+    });
+    const deletecollectionMutation = useMutation({
+        mutationFn: deleteCollection,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["collections"] });
+        },
+        onError: (error) => {
+            console.error("Error deleting todo:", error);
+        },
+    });
+
+    // useEffect(() => {
+    //     if (state.collections.length > 0) {
+    //         localStorage.setItem("collections", JSON.stringify(state.collections));
+    //     }
+    // }, [state.collections]);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(event.target.value);
+    };
+
+    const handleEditClick = (id: string, name: string) => {
+        // Enable editing mode and set the task details for the input field
+        setIsEditing(true);
+        setEditingTaskId(id);
+        setInputValue(name);
     };
 
     const handleAddTask = () => {
         if (inputValue.trim() === "" || !collectionId) return;
 
         if (isEditing && editingTaskId) {
-            dispatch({
-                type: ActionType.UPDATE_TODO,
-                payload: {
-                    collectionId,
-                    todoId: editingTaskId,
-                    name: inputValue,
-                },
-            });
-            setIsEditing(false);
-            setEditingTaskId(null);
-        } else {
-            dispatch({
-                type: ActionType.ADD_TODO,
-                payload: {
-                    collectionId,
-                    name: inputValue,
-                },
-            });
-        }
+            const updatedTask = {
+                id: editingTaskId,
+                title: inputValue,
+                collectionId,
+            };
 
-        setInputValue("");
+            mutation2.mutate(updatedTask, {
+                onSuccess: () => {
+                    setIsEditing(false);
+                    setEditingTaskId(null);
+                    setInputValue("");
+                },
+            });
+        } else {
+            mutation.mutate(
+                { title: inputValue, collectionId },
+                {
+                    onSuccess: () => {
+                        setInputValue("");
+                    },
+                }
+            );
+        }
     };
+
+    <Button onClick={handleAddTask} className="ml-1">
+        {isEditing ? "Update" : "Add"}
+    </Button>;
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
@@ -74,30 +215,7 @@ const TodoList = () => {
     };
 
     const handleDeleteTask = (taskId: string) => {
-        dispatch({
-            type: ActionType.DELETE_TODO,
-            payload: {
-                collectionId,
-                todoId: taskId,
-            },
-        });
-    };
-
-    const handleEditClick = (id: string, name: string) => {
-        setIsEditing(true);
-        setEditingTaskId(id);
-        setInputValue(name);
-    };
-
-    const handleCheckboxChange = (taskId: string, checked: boolean) => {
-        dispatch({
-            type: ActionType.TOGGLE_TODO,
-            payload: {
-                collectionId,
-                taskId,
-                isChecked: checked,
-            },
-        });
+        deleteMutation.mutate(taskId);
     };
 
     const handleBackClick = () => {
@@ -105,23 +223,21 @@ const TodoList = () => {
     };
 
     const handleConfirmDelete = () => {
-        if (collectionId) {
-            dispatch({
-                type: ActionType.DELETE_COLLECTION,
-                payload: { collectionId: collectionId },
-            });
-            setDialogOpen(false);
-            navigate(-1);
-        }
+        deletecollectionMutation.mutate(collectionId);
+        navigate(-1);
     };
 
     const handleCancelDelete = () => {
         setDialogOpen(false);
     };
 
-    if (!collection) {
-        return <div>Collection not found.</div>;
+    function handleCheckboxChange(id: any, checked: boolean): void {
+        throw new Error("Function not implemented.");
     }
+
+    // if (!collection) {
+    //     return <div>Collection not found.</div>;
+    // }
 
     return (
         <div className="flex flex-col px-14 w-full">
@@ -133,9 +249,7 @@ const TodoList = () => {
                     <MdOutlineArrowBackIosNew className="text-2xl" />
                 </div>
                 <div className="flex justify-between items-center w-full">
-                    <h1 className="text-2xl font-semibold ml-2 self-center">
-                        {collection.title || "Todo List"}
-                    </h1>
+                    <h1 className="text-2xl font-semibold ml-2 self-center">{collectionName}</h1>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
@@ -163,35 +277,39 @@ const TodoList = () => {
                     value={inputValue}
                     onKeyDown={handleKeyDown}
                     placeholder="Add a new Task..."
-                    className="bg-muted rounded-lg w-full outline-none border-none"
+                    className={`bg-muted rounded-lg w-full outline-none border-none  ${isEditing ? "ring-2" : ""}`}
                     onChange={handleInputChange}
                 />
-                <Button onClick={handleAddTask} className="ml-1">
-                    Add
+                <Button
+                    onClick={handleAddTask}
+                    className="ml-1 "
+                    disabled={isEditing && !editingTaskId}
+                >
+                    {isEditing ? "Update" : "Add"}
                 </Button>
             </div>
             <ul className="mt-12 flex flex-col items-center justify-center w-full">
-                {collection.todos.length === 0 ? (
+                {data.data.todoItems.length === 0 ? (
                     <div className="w-full h-fit flex justify-center items-center p-12">
                         <p className="text-muted-foreground">
                             No tasks available. Add a task to get started!
                         </p>
                     </div>
                 ) : (
-                    collection.todos.map((task) => (
+                    data.data.todoItems.map((task: any) => (
                         <li
                             key={task.id}
                             className="w-full flex items-center justify-between bg-muted p-4 mb-3 rounded-lg"
                         >
                             <div className="flex items-center">
                                 <ControlledCheckbox
-                                    isChecked={task.isChecked}
+                                    isChecked={task.isCompleted}
                                     onCheckedChange={(checked) =>
                                         handleCheckboxChange(task.id, checked)
                                     }
                                 />
                                 <h2 className={`ml-3 ${task.isChecked ? "line-through" : ""}`}>
-                                    {task.name}
+                                    {task.title}
                                 </h2>
                             </div>
                             <div className="flex items-center">

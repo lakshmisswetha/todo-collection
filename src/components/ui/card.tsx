@@ -13,7 +13,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         const navigate = useNavigate();
 
         const handleClick = () => {
-            navigate("/todo", { state: { id: collection.id } });
+            navigate("/todo", { state: { id: collection.id, name: collection.name } });
         };
 
         return (
@@ -25,7 +25,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
                     className
                 )}
                 {...props}
-                data-title={collection.title}
+                data-title={collection.name}
             />
         );
     }

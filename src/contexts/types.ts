@@ -7,7 +7,7 @@ export type Todo = {
 
 export type Collection = {
     id: string;
-    title: string;
+    name: string;
     todos: Todo[];
 };
 
