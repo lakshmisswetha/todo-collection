@@ -1,12 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -14,9 +7,6 @@ import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-//import { useCollectionContext } from "@/contexts/collectionContext";
-
-import { ActionType } from "../../contexts/types";
 import { BASE_URL } from "@/utils/config";
 
 export function DialogDemo() {
@@ -86,18 +76,13 @@ export function DialogDemo() {
                         <Label htmlFor="name" className="text-right">
                             Category
                         </Label>
-                        <Input
-                            id="name"
-                            onChange={(e) => setCollectionName(e.target.value)}
-                            value={collectionName}
-                            className="col-span-3"
-                            placeholder="Collection name..."
-                            onKeyDown={handleKeyDown}
-                        />
+                        <Input id="name" onChange={(e) => setCollectionName(e.target.value)} value={collectionName} className="col-span-3" placeholder="Collection name..." onKeyDown={handleKeyDown} />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit">Create</Button>
+                    <Button type="submit" onClick={handleCreateCollection}>
+                        Create
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -1,27 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineArrowBackIosNew, MdDelete, MdModeEdit } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import ControlledCheckbox from "@/components/ui/controlledCheckBox";
-//import { useCollectionContext } from "@/contexts/collectionContext";
-import { ActionType } from "../contexts/types";
 import { BASE_URL } from "@/utils/config";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const fetchTodos = async (userId: string | null, collectionId: string | null) => {
-    const response = await fetch(
-        `${BASE_URL}/todos/get?userId=${userId}&collectionId=${collectionId}`
-    );
+    const response = await fetch(`${BASE_URL}/todos/get?userId=${userId}&collectionId=${collectionId}`);
     if (!response.ok) {
         throw new Error("Failed to fetch todos");
     }
@@ -94,9 +83,25 @@ const deleteCollection = async (collectionId: any) => {
         console.log(error);
     }
 };
+const updateTodoStatus = async ({ taskId, isCompleted }: { taskId: string; isCompleted: boolean }) => {
+    try {
+        const response = await fetch(`${BASE_URL}/todos/status`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ taskId, isCompleted }),
+        });
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 const TodoList = () => {
-    //const { state, dispatch } = useCollectionContext();
     const queryClient = useQueryClient();
     const location = useLocation();
     const navigate = useNavigate();
@@ -104,7 +109,6 @@ const TodoList = () => {
 
     const collectionId = (location.state as { id: string })?.id;
     const collectionName = (location.state as { name: string })?.name;
-    //const collection = state.collections.find((c) => c.id === collectionId);
 
     const [inputValue, setInputValue] = useState("");
     const [isEditing, setIsEditing] = useState(false);
@@ -128,6 +132,7 @@ const TodoList = () => {
 
     const mutation2 = useMutation({
         mutationFn: updateTodos,
+        // 5 minutes
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["todos"] });
             setIsEditing(false);
@@ -157,19 +162,21 @@ const TodoList = () => {
             console.error("Error deleting todo:", error);
         },
     });
-
-    // useEffect(() => {
-    //     if (state.collections.length > 0) {
-    //         localStorage.setItem("collections", JSON.stringify(state.collections));
-    //     }
-    // }, [state.collections]);
+    const checkboxMutation = useMutation({
+        mutationFn: updateTodoStatus,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["todos"] });
+        },
+        onError: (error) => {
+            console.error("Error updating checkbox:", error);
+        },
+    });
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(event.target.value);
     };
 
     const handleEditClick = (id: string, name: string) => {
-        // Enable editing mode and set the task details for the input field
         setIsEditing(true);
         setEditingTaskId(id);
         setInputValue(name);
@@ -231,21 +238,14 @@ const TodoList = () => {
         setDialogOpen(false);
     };
 
-    function handleCheckboxChange(id: any, checked: boolean): void {
-        throw new Error("Function not implemented.");
+    function handleCheckboxChange(id: string, checked: boolean): void {
+        checkboxMutation.mutate({ taskId: id, isCompleted: checked });
     }
-
-    // if (!collection) {
-    //     return <div>Collection not found.</div>;
-    // }
 
     return (
         <div className="flex flex-col px-14 w-full">
             <div className="flex items-center w-full mb-6">
-                <div
-                    onClick={handleBackClick}
-                    className="flex justify-center items-center cursor-pointer"
-                >
+                <div onClick={handleBackClick} className="flex justify-center items-center cursor-pointer">
                     <MdOutlineArrowBackIosNew className="text-2xl" />
                 </div>
                 <div className="flex justify-between items-center w-full">
@@ -260,10 +260,7 @@ const TodoList = () => {
                         <DialogHeader>
                             <DialogTitle>Confirm Deletion</DialogTitle>
                         </DialogHeader>
-                        <p>
-                            Are you sure you want to delete this collection? This action cannot be
-                            undone.
-                        </p>
+                        <p>Are you sure you want to delete this collection? This action cannot be undone.</p>
                         <DialogFooter>
                             <Button onClick={handleConfirmDelete}>Yes, Delete</Button>
                             <Button onClick={handleCancelDelete}>Cancel</Button>
@@ -280,47 +277,25 @@ const TodoList = () => {
                     className={`bg-muted rounded-lg w-full outline-none border-none  ${isEditing ? "ring-2" : ""}`}
                     onChange={handleInputChange}
                 />
-                <Button
-                    onClick={handleAddTask}
-                    className="ml-1 "
-                    disabled={isEditing && !editingTaskId}
-                >
+                <Button onClick={handleAddTask} className="ml-1 " disabled={isEditing && !editingTaskId}>
                     {isEditing ? "Update" : "Add"}
                 </Button>
             </div>
             <ul className="mt-12 flex flex-col items-center justify-center w-full">
                 {data.data.todoItems.length === 0 ? (
                     <div className="w-full h-fit flex justify-center items-center p-12">
-                        <p className="text-muted-foreground">
-                            No tasks available. Add a task to get started!
-                        </p>
+                        <p className="text-muted-foreground">No tasks available. Add a task to get started!</p>
                     </div>
                 ) : (
                     data.data.todoItems.map((task: any) => (
-                        <li
-                            key={task.id}
-                            className="w-full flex items-center justify-between bg-muted p-4 mb-3 rounded-lg"
-                        >
+                        <li key={task.id} className="w-full flex items-center justify-between bg-muted p-4 mb-3 rounded-lg">
                             <div className="flex items-center">
-                                <ControlledCheckbox
-                                    isChecked={task.isCompleted}
-                                    onCheckedChange={(checked) =>
-                                        handleCheckboxChange(task.id, checked)
-                                    }
-                                />
-                                <h2 className={`ml-3 ${task.isChecked ? "line-through" : ""}`}>
-                                    {task.title}
-                                </h2>
+                                <ControlledCheckbox isChecked={task.isCompleted} onCheckedChange={(checked) => handleCheckboxChange(task.id, checked)} />
+                                <h2 className={`ml-3 ${task.isCompleted ? "line-through" : ""}`}>{task.title}</h2>
                             </div>
                             <div className="flex items-center">
-                                <MdDelete
-                                    className="text-xl hover:text-red-400 cursor-pointer mr-2"
-                                    onClick={() => handleDeleteTask(task.id)}
-                                />
-                                <MdModeEdit
-                                    className="text-xl cursor-pointer hover:text-blue-400"
-                                    onClick={() => handleEditClick(task.id, task.name)}
-                                />
+                                <MdDelete className="text-xl hover:text-red-400 cursor-pointer mr-2" onClick={() => handleDeleteTask(task.id)} />
+                                <MdModeEdit className="text-xl cursor-pointer hover:text-blue-400" onClick={() => handleEditClick(task.id, task.name)} />
                             </div>
                         </li>
                     ))

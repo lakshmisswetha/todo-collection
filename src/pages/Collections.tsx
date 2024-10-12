@@ -26,8 +26,6 @@ const fetchCollections = async () => {
 };
 
 const Collections = () => {
-    //const { state } = useCollectionContext();
-    //const collections = state?.collections || [];
     const { data, isLoading, error } = useQuery({
         queryKey: ["collections"],
         queryFn: () => fetchCollections(),
@@ -62,11 +60,9 @@ const Collections = () => {
                                     <MdPersonalInjury className="text-yellow-200 text-3xl" />
                                 ) : collection.name && collection.name.toLowerCase() === "work" ? (
                                     <FaLaptop className="text-blue-200 text-3xl" />
-                                ) : collection.name &&
-                                  collection.name.toLowerCase() === "grocery" ? (
+                                ) : collection.name && collection.name.toLowerCase() === "grocery" ? (
                                     <MdLocalGroceryStore className="text-emerald-200 text-3xl" />
-                                ) : collection.name &&
-                                  collection.name.toLowerCase() === "fitness" ? (
+                                ) : collection.name && collection.name.toLowerCase() === "fitness" ? (
                                     <FaHandHoldingHeart className="text-rose-300 text-3xl" />
                                 ) : (
                                     <FaRegSmileBeam className="text-purple-200 text-3xl" />
